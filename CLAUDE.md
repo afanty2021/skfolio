@@ -1,7 +1,7 @@
 # skfolio - 投资组合优化库
 
-> 更新时间：2025-12-23 10:30:00 UTC
-> 当前版本：v0.15.2
+> 更新时间：2026-01-30 10:30:00 UTC
+> 当前版本：v0.15.4
 
 ## 项目愿景
 
@@ -196,6 +196,27 @@ portfolio = model.predict_
 4. **测试先行**：为新功能编写对应的单元测试
 
 ## 变更记录 (Changelog)
+
+### 2026-01-30 10:30:00 UTC - 📚 文档同步更新
+- 🔄 **版本更新**：项目从 v0.15.2 更新到 v0.15.4
+- 🔧 **类型提示修复**：修复 cvxpy.Expression 类型提示兼容性（支持 cvxpy v1.8+）
+- 🐛 **NaN 处理改进**：Portfolio 现在能优雅地处理 NaN 值（PR #212）
+- 📝 **文档改进**：
+  - 改进 `prices_to_returns` 文档说明
+  - 完善投资组合权重漂移（weight drift）的文档
+- 🔧 **CI/CD 更新**：
+  - 升级 actions/upload-artifact v5→v6
+  - 升级 python-semantic-release
+
+### v0.15.4 (2026-01-29) - 🔧 类型提示修复
+- 修复 cvxpy trace 类型提示兼容性问题
+- 使用 `cvxpy.Expression` 替代 `trace/Trace` 类型提示
+- 改善与 cvxpy v1.8+ 版本的兼容性
+
+### v0.15.3 (2026-01-xx) - 🐛 NaN 处理修复
+- 修复 Portfolio 在 predict 时的 NaN 处理问题（Issue #210）
+- 改进投资组合计算中的数值稳定性
+- 确保在存在 NaN 值时返回有效投资组合或 FailedPortfolio
 
 ### 2025-12-23 10:30:00 UTC - 🎉 文档体系完成
 - ✅ **完成所有模块文档**：16个模块全部创建详细的 CLAUDE.md 文档
