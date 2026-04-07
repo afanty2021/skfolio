@@ -23,7 +23,8 @@ moments/
 │   ├── _denoise_covariance.py   # 去噪协方差
 │   ├── _detone_covariance.py    # 去调协方差
 │   ├── _graphical_lasso_cv.py   # 图套索交叉验证
-│   └── _implied_covariance.py   # 隐含协方差
+│   ├── _implied_covariance.py   # 隐含协方差
+│   ├── _regime_adjusted_ew_covariance.py  # 制度调整 EW 协方差（v0.17.0+）
 └── expected_returns/       # 期望收益估计
     ├── __init__.py
     ├── _base.py            # BaseMu 基类
@@ -31,6 +32,12 @@ moments/
     ├── _ew_mu.py          # 指数加权期望收益
     ├── _shrunk_mu.py      # 收缩期望收益
     └── _equilibrium_mu.py # 均衡期望收益
+└── variance/               # 方差估计（v0.17.0+）
+    ├── __init__.py
+    ├── _base.py            # BaseVariance 基类
+    ├── _empirical_variance.py  # 经验方差
+    ├── _ew_variance.py     # 指数加权方差
+    └── _regime_adjusted_ew_variance.py  # 制度调整 EW 方差
 ```
 
 ## 入口与启动
@@ -50,12 +57,18 @@ from skfolio.moments import (
     DetoneCovariance,        # 去调协方差
     GraphicalLassoCV,        # 图套索交叉验证
     ImpliedCovariance,       # 隐含协方差
+    RegimeAdjustedEWCovariance,  # 制度调整 EW 协方差 (v0.17.0+)
 
     # 期望收益估计器
     EmpiricalMu,             # 经验期望收益
     EWMu,                    # 指数加权期望收益
     ShrunkMu,                # 收缩期望收益
     EquilibriumMu,           # 均衡期望收益
+
+    # 方差估计器 (v0.17.0+)
+    EmpiricalVariance,       # 经验方差
+    EWVariance,              # 指数加权方差
+    RegimeAdjustedEWVariance,  # 制度调整 EW 方差
 )
 ```
 
@@ -117,6 +130,34 @@ estimator = GerberCovariance(
 )
 ```
 
+#### 5. 制度调整指数加权协方差 (v0.17.0+)
+```python
+estimator = RegimeAdjustedEWCovariance(
+    rolling_window_size=60,        # 滚动窗口大小
+    reg_changes_threshold=2.0,     # 制度变化阈值
+    halflife=252,                  # 半衰期
+    decay=0.94,                    # 衰减因子
+)
+```
+
+### 在线学习支持 (v0.17.0+)
+
+`EWCovariance` 和 `EWMu` 现在支持增量学习：
+
+```python
+# 创建支持在线学习的估计器
+ew_cov = EWCovariance(span=60)
+
+# 分批拟合数据（适用于大规模数据集）
+batch_size = 100
+for i in range(0, len(returns), batch_size):
+    batch = returns.iloc[i:i+batch_size]
+    ew_cov.partial_fit(batch)  # 增量拟合
+
+# 获取最终估计
+cov_matrix = ew_cov.covariance_
+```
+
 ### BaseMu 基类
 
 期望收益估计器的基类：
@@ -157,6 +198,35 @@ estimator = ShrunkMu(
     prior_estimator=EmpiricalMu(),  # 先验估计器
     shrinkage_factor=0.5,           # 收缩因子
     delta=0.5,                      # 平滑参数
+)
+```
+
+### 方差估计器 (v0.17.0+)
+
+#### 1. 经验方差
+```python
+estimator = EmpiricalVariance(
+    assume_centered=False,  # 是否假设数据中心化
+)
+```
+
+#### 2. 指数加权方差
+```python
+estimator = EWVariance(
+    span=60,                # 跨度参数
+    halflife=252,           # 半衰期
+    decay=0.94,             # 衰减因子
+    assume_centered=False,
+)
+```
+
+#### 3. 制度调整指数加权方差
+```python
+estimator = RegimeAdjustedEWVariance(
+    rolling_window_size=60,        # 滚动窗口大小
+    reg_changes_threshold=2.0,     # 制度变化阈值
+    halflife=252,                  # 半衰期
+    decay=0.94,                    # 衰减因子
 )
 ```
 
@@ -263,6 +333,48 @@ mu_estimator = ShrunkMu(
 )
 ```
 
+### Q: 如何使用制度调整的估计器？(v0.17.0+)
+A:
+```python
+# 制度调整的指数加权协方差
+from skfolio.moments import RegimeAdjustedEWCovariance
+
+cov_estimator = RegimeAdjustedEWCovariance(
+    rolling_window_size=60,        # 60天滚动窗口
+    reg_changes_threshold=2.0,     # 检测制度变化的阈值
+)
+cov_estimator.fit(returns)
+cov_matrix = cov_estimator.covariance_
+
+# 制度调整的指数加权方差
+from skfolio.moments import RegimeAdjustedEWVariance
+
+var_estimator = RegimeAdjustedEWVariance(
+    rolling_window_size=60,
+    reg_changes_threshold=2.0,
+)
+var_estimator.fit(returns)
+variance = var_estimator.variance_
+```
+
+### Q: 如何处理流式数据或大规模数据集？(v0.17.0+)
+A:
+```python
+# 使用在线学习（partial_fit）处理流式数据
+from skfolio.moments import EWCovariance
+
+ew_cov = EWCovariance(span=60)
+
+# 分批拟合数据
+batch_size = 1000
+for i in range(0, len(returns), batch_size):
+    batch = returns.iloc[i:i+batch_size]
+    ew_cov.partial_fit(batch)
+
+# 获取最终估计
+cov_matrix = ew_cov.covariance_
+```
+
 ## 相关文件清单
 
 ### 核心实现
@@ -280,6 +392,19 @@ mu_estimator = ShrunkMu(
 - `examples/mean_risk/plot_12_black_and_litterman.py` - Black-Litterman 示例
 
 ## 变更记录 (Changelog)
+
+### 2026-04-05 11:23:14 UTC - v0.17.0 重大更新 🚀
+- ✨ **新增方差估计器**：
+  - `EmpiricalVariance` - 经验方差估计器
+  - `EWVariance` - 指数加权方差估计器
+  - `RegimeAdjustedEWVariance` - 制度调整的指数加权方差估计器
+- ✨ **新增协方差估计器**：
+  - `RegimeAdjustedEWCovariance` - 制度调整的指数加权协方差估计器
+- 🌟 **在线学习支持**（重大改进）：
+  - `EWMu` 和 `EWCovariance` 新增 `partial_fit()` 方法
+  - NaN 值感知处理，支持流式数据处理
+  - 适用于大规模数据集和实时更新场景
+- 📝 **文档改进**：更新所有估计器的文档字符串
 
 ### 2025-12-09 06:15:32 UTC - 模块初始化
 - 📚 **创建模块文档**：完整记录了 moments 模块的功能
@@ -322,6 +447,7 @@ class NewEstimator(BaseCovariance):
 ## 性能提示
 
 1. **维度控制**：对于高维数据使用收缩方法
-2. **更新策略**：使用增量更新处理流数据
+2. **更新策略**：使用 `partial_fit()` 处理流式数据或大规模数据集（v0.17.0+）
 3. **并行计算**：利用多核加速计算
 4. **缓存结果**：缓存重复使用的估计结果
+5. **制度检测**：使用制度调整估计器处理市场状态变化（v0.17.0+）

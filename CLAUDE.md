@@ -1,7 +1,7 @@
 # skfolio - 投资组合优化库
 
-> 更新时间：2026-02-14 13:12:00 UTC
-> 当前版本：v0.15.5
+> 更新时间：2026-04-07 12:00:00 UTC
+> 当前版本：v0.17.0
 
 ## 项目愿景
 
@@ -79,7 +79,7 @@ graph TD
 | **optimization** | `src/skfolio/optimization/` | 投资组合优化算法 | MeanRisk, HierarchicalRiskParity, StackingOptimization | ✅ 完整 |
 | **portfolio** | `src/skfolio/portfolio/` | 投资组合表示与管理 | Portfolio, MultiPeriodPortfolio, BasePortfolio | ✅ 完整 |
 | **measures** | `src/skfolio/measures/` | 风险与绩效度量 | sharpe_ratio, cvar, max_drawdown, variance | ✅ 完整 |
-| **moments** | `src/skfolio/moments/` | 统计矩估计 | EmpiricalCovariance, LedoitWolf, EmpiricalMu | ✅ 完整 |
+| **moments** | `src/skfolio/moments/` | 统计矩估计 | EmpiricalCovariance, LedoitWolf, EmpiricalMu, EWVariance, RegimeAdjustedEWVariance | ✅ 完整 |
 | **distribution** | `src/skfolio/distribution/` | 概率分布建模 | GaussianCopula, VineCopula, StudentT | ✅ 完整 |
 | **model_selection** | `src/skfolio/model_selection/` | 模型选择与验证 | WalkForward, CombinatorialPurgedCV | ✅ 完整 |
 | **population** | `src/skfolio/population/` | 投资组合种群管理 | Population, BasePopulation | ✅ 完整 |
@@ -140,6 +140,44 @@ model.fit(returns)
 portfolio = model.predict_
 ```
 
+### 新功能示例（v0.17.0）
+```python
+# 使用新的方差估计器
+from skfolio.moments import EWVariance, RegimeAdjustedEWVariance
+
+# 指数加权方差估计
+ew_variance = EWVariance(span=60)
+ew_variance.fit(returns)
+cov_matrix = ew_variance.covariance_
+
+# 制度调整的指数加权方差估计
+reg_variance = RegimeAdjustedEWVariance(
+    rolling_window_size=60,
+    reg_changes_threshold=2.0
+)
+reg_variance.fit(returns)
+cov_matrix_reg = reg_variance.covariance_
+
+# 在线学习支持（partial_fit）
+from skfolio.moments import EWCovariance
+
+# 创建支持增量学习的估计器
+ew_cov = EWCovariance(span=60)
+
+# 分批拟合数据
+batch_size = 100
+for i in range(0, len(returns), batch_size):
+    batch = returns.iloc[i:i+batch_size]
+    ew_cov.partial_fit(batch)
+
+# 获取最终估计
+cov_matrix_online = ew_cov.covariance_
+
+# Population 的 returns_df 属性
+population = Population([portfolio])
+returns_df = population.returns_df  # 直接访问收益率 DataFrame
+```
+
 ## 测试策略
 
 - **单元测试**：每个模块都有对应的测试目录 `tests/test_*/`
@@ -193,9 +231,53 @@ portfolio = model.predict_
 1. **新优化器**：继承 BaseOptimization 或其子类
 2. **新风险度量**：添加到 RiskMeasure 枚举并实现对应函数
 3. **新分布**：继承 BaseUnivariateDist 或 BaseMultivariateDist
-4. **测试先行**：为新功能编写对应的单元测试
+4. **新矩估计器**：
+   - 方差估计器继承 `BaseCovariance` 基类
+   - 实现 `partial_fit()` 方法以支持在线学习
+   - 处理 NaN 值时使用 `nan_policy` 参数
+5. **测试先行**：为新功能编写对应的单元测试
 
 ## 变更记录 (Changelog)
+
+### 2026-04-05 11:23:14 UTC - v0.17.0 发布 🚀
+- 🎯 **重大更新**：从 v0.15.5 更新到 v0.17.0（跨越2个大版本）
+- ✨ **方差估计器新增**（PR #228）：
+  - `EmpiricalVariance` - 经验方差估计器
+  - `EWVariance` - 指数加权方差估计器
+  - `RegimeAdjustedEWVariance` - 制度调整的指数加权方差估计器
+- ✨ **协方差估计器增强**：
+  - `RegimeAdjustedEWCovariance` - 制度调整的指数加权协方差估计器
+- 🌟 **在线学习支持**（重大改进）：
+  - `EWMu` 和 `EWCovariance` 现在支持 `partial_fit()` 方法
+  - NaN 值感知处理，支持流式数据处理
+  - 适用于大规模数据集和实时更新场景
+- 📊 **Population 增强**：
+  - 新增 `returns_df` 属性，可直接访问收益率 DataFrame
+- 🔧 **模型选择改进**：
+  - `MultipleRandomizedCV` 新增 `get_n_splits()` 方法
+- 🐛 **重要修复**：
+  - 移除 `BaseOptimization.__init__` 上的 `abstractmethod` 装饰器
+  - 改善优化器的继承和实例化机制
+- 📝 **文档改进**：改进大量文档字符串
+- 🔧 **CI/CD 升级**：
+  - codecov-action v5→v6
+  - actions/deploy-pages v4→v5
+  - actions/create-github-app-token v2→v3
+
+### 2026-03-xx - v0.16.1 发布
+- 🐛 **BaseOptimization 修复**：移除 `__init__` 上的 abstractmethod 装饰器
+
+### 2026-03-xx - v0.16.0 发布
+- ✨ **Population 功能增强**：
+  - 新增 `returns_df` 属性
+- ✨ **交叉验证改进**：
+  - `MultipleRandomizedCV` 新增 `get_n_splits()` 方法
+
+### 2026-02-xx - v0.15.7 发布
+- 🐛 **BenchmarkTracker 修复**：支持基于字典的权重约束
+
+### 2026-02-xx - v0.15.6 发布
+- 🔧 **内部改进**：添加 `.gitattributes` 配置
 
 ### 2026-02-14 13:12:00 UTC - v0.15.5 发布
 - 🔄 **版本更新**：从 v0.15.4 更新到 v0.15.5

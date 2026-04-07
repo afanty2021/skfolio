@@ -44,6 +44,7 @@ class Population(BasePopulation):
     # 属性
     portfolios: list          # 投资组合列表
     n_portfolios: int         # 投资组合数量
+    returns_df: pd.DataFrame  # 收益率 DataFrame (v0.17.0+)
 
     # 方法
     def append(self, portfolio):        # 添加投资组合
@@ -96,6 +97,11 @@ best_portfolio = population.get_best("sharpe_ratio")
 
 # 绘制有效前沿
 population.plot_frontier()
+
+# 访问收益率 DataFrame (v0.17.0+)
+returns_df = population.returns_df
+print(f"收益率矩阵形状: {returns_df.shape}")
+# 可用于进一步的统计分析或可视化
 ```
 
 ## 关键功能
@@ -259,6 +265,12 @@ population = Population(portfolios)
 - 各优化器示例中展示 Population 使用
 
 ## 变更记录 (Changelog)
+
+### 2026-04-05 11:23:14 UTC - v0.17.0 功能增强
+- ✨ **新增 `returns_df` 属性**：
+  - 可直接访问 Population 中所有投资组合的收益率 DataFrame
+  - 便于批量分析和可视化
+  - 简化了数据处理流程
 
 ### 2025-12-09 06:15:32 UTC - 模块初始化
 - 📚 **创建模块文档**：完整记录了 population 模块的功能
