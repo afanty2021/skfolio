@@ -169,11 +169,17 @@ Available models
     * Denoising
     * Detoning
     * Exponentially Weighted
+    * Regime-Adjusted Exponentially Weighted
     * Ledoit-Wolf
     * Oracle Approximating Shrinkage
     * Shrunk Covariance
     * Graphical Lasso CV
     * Implied Covariance
+
+* Variance Estimator:
+    * Empirical
+    * Exponentially Weighted
+    * Regime-Adjusted Exponentially Weighted
 
 * Distance Estimator:
     * Pearson Distance
@@ -320,7 +326,7 @@ Imports
         BlackLitterman,
         EmpiricalPrior,
         EntropyPooling,
-        FactorModel,
+        TimeSeriesFactorModel,
         OpinionPooling,
         SyntheticData,
      )
@@ -507,7 +513,7 @@ Factor Model
         X, factors, test_size=0.33, shuffle=False
     )
 
-    model = MeanRisk(prior_estimator=FactorModel())
+    model = MeanRisk(prior_estimator=TimeSeriesFactorModel())
     model.fit(X_train, factors_train)
 
     print(model.weights_)
@@ -522,7 +528,7 @@ Factor Model & Covariance Detoning
 .. code-block:: python
 
     model = MeanRisk(
-        prior_estimator=FactorModel(
+        prior_estimator=TimeSeriesFactorModel(
             factor_prior_estimator=EmpiricalPrior(covariance_estimator=DetoneCovariance())
         )
     )
@@ -534,7 +540,7 @@ Black & Litterman Factor Model
     factor_views = ["MTUM - QUAL == 0.03 ", "SIZE - TLT == 0.04", "VLUE == 0.06"]
     model = MeanRisk(
         objective_function=ObjectiveFunction.MAXIMIZE_RATIO,
-        prior_estimator=FactorModel(
+        prior_estimator=TimeSeriesFactorModel(
             factor_prior_estimator=BlackLitterman(views=factor_views),
         ),
     )
@@ -612,7 +618,7 @@ Minimum CVaR Optimization on Synthetic Factors
         n_samples=10_000,
         sample_args=dict(conditioning={"QUAL": -0.2}),
     )
-    factor_model = FactorModel(factor_prior_estimator=factor_prior)
+    factor_model = TimeSeriesFactorModel(factor_prior_estimator=factor_prior)
     model = MeanRisk(risk_measure=RiskMeasure.CVAR, prior_estimator=factor_model)
     model.fit(X, factors)
     print(model.weights_)
@@ -717,6 +723,7 @@ We would like to thank all contributors to our direct dependencies, such as
     * rsome
     * `Microprediction <https://github.com/microprediction>`_ (Peter Cotton)
     * `Portfolio Optimization Book <https://portfoliooptimizationbook.com/>`_ (Daniel P. Palomar)
+    * *The Elements of Quantitative Investing* (Giuseppe Paleologo)
     * `quantresearch.org <https://quantresearch.org>`_ (Marcos López de Prado)
     * gautier.marti.ai (Gautier Marti)
 
