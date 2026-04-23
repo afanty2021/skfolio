@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -121,7 +123,7 @@ class TestRegimeAdjustedEWVarianceBasic:
             RegimeAdjustmentMethod.RMS,
         ],
     )
-    def test_vra_params(self, X, regime_method):
+    def test_regime_params(self, X, regime_method):
         """Test RegimeAdjustedEWVariance with custom STVU parameters."""
         model = RegimeAdjustedEWVariance(
             regime_method=regime_method,

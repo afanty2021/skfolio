@@ -373,7 +373,7 @@ Classes
 .. _variance_ref:
 
 :mod:`skfolio.moments.variance`: Variance Estimators
-==================================================
+====================================================
 
 .. automodule:: skfolio.moments.variance
    :no-members:
@@ -586,6 +586,38 @@ Classes
     pre_selection.SelectComplete
     pre_selection.SelectNonExpiring
 
+.. _linear_model_ref:
+
+:mod:`skfolio.linear_model`: Cross-sectional linear models
+==========================================================
+
+.. automodule:: skfolio.linear_model
+   :no-members:
+   :no-inherited-members:
+
+Base Class
+----------
+.. currentmodule:: skfolio
+
+.. autosummary::
+    :nosignatures:
+    :toctree: generated/
+    :template: class.rst
+
+    linear_model.BaseCSLinearModel
+
+Classes
+-------
+.. currentmodule:: skfolio
+
+.. autosummary::
+    :nosignatures:
+    :toctree: generated/
+    :template: class.rst
+
+    linear_model.CSLinearRegression
+    linear_model.CSLinearRegressorWrapper
+
 .. _model_selection_ref:
 
 :mod:`skfolio.model_selection`: Model Selection
@@ -618,6 +650,11 @@ Classes
     model_selection.WalkForward
     model_selection.CombinatorialPurgedCV
     model_selection.MultipleRandomizedCV
+    model_selection.OnlineGridSearch
+    model_selection.OnlineRandomizedSearch
+    model_selection.CovarianceForecastEvaluation
+    model_selection.CovarianceForecastComparison
+
 
 Functions
 ---------
@@ -628,6 +665,10 @@ Functions
     :template: function.rst
 
     model_selection.cross_val_predict
+    model_selection.online_predict
+    model_selection.online_score
+    model_selection.online_covariance_forecast_evaluation
+    model_selection.covariance_forecast_evaluation
     model_selection.optimal_folds_number
 
 .. _metrics_ref:
@@ -648,6 +689,15 @@ Functions
     :template: function.rst
 
     metrics.make_scorer
+    metrics.diagonal_calibration_loss
+    metrics.diagonal_calibration_ratio
+    metrics.exceedance_rate
+    metrics.mahalanobis_calibration_loss
+    metrics.mahalanobis_calibration_ratio
+    metrics.portfolio_variance_calibration_loss
+    metrics.portfolio_variance_calibration_ratio
+    metrics.portfolio_variance_qlike_loss
+    metrics.qlike_loss
 
 .. _datasets_ref:
 
@@ -673,6 +723,36 @@ Functions
 
 :mod:`skfolio.preprocessing`: Preprocessing
 ===========================================
+
+.. automodule:: skfolio.preprocessing
+   :no-members:
+   :no-inherited-members:
+
+Base Class
+----------
+.. currentmodule:: skfolio
+
+.. autosummary::
+    :nosignatures:
+    :toctree: generated/
+    :template: class.rst
+
+    preprocessing.BaseCSTransformer
+
+Classes
+-------
+.. currentmodule:: skfolio
+
+.. autosummary::
+    :nosignatures:
+    :toctree: generated/
+    :template: class.rst
+
+    preprocessing.CSGaussianRankScaler
+    preprocessing.CSPercentileRankScaler
+    preprocessing.CSStandardScaler
+    preprocessing.CSTanhShrinker
+    preprocessing.CSWinsorizer
 
 Functions
 ---------

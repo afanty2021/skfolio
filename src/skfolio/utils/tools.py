@@ -1,27 +1,32 @@
 """Tools module."""
 
 # Copyright (c) 2023-2026
-# Author: Hugo Delatte <delatte.hugo@gmail.com>
+# Author: Hugo Delatte <hugo.delatte@skfoliolabs.com>
 # SPDX-License-Identifier: BSD-3-Clause
 # Implementation derived from:
 # scikit-learn, Copyright (c) 2007-2010 David Cournapeau, Fabian Pedregosa, Olivier
 # Grisel Licensed under BSD 3 clause.
 
+from __future__ import annotations
+
 import warnings
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from enum import Enum
 from functools import wraps
 from typing import Any, Literal
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
 import sklearn as sk
 import sklearn.base as skb
+from sklearn.utils import Bunch
+
+from skfolio.typing import ArrayLike, BoolArray, FloatArray, IntArray, ObjArray
 
 __all__ = [
     "AutoEnum",
+    "_call_estimator",
     "apply_window_size",
     "args_names",
     "bisection",
@@ -147,9 +152,9 @@ def _make_indexable(iterable):
 
 
 def _check_method_params(
-    X: npt.ArrayLike,
+    X: ArrayLike,
     params: dict,
-    indices: np.ndarray | slice | None = None,
+    indices: IntArray | slice | None = None,
     axis: int = 0,
 ):
     """Check and validate the parameters passed to a specific
@@ -176,7 +181,7 @@ def _check_method_params(
     method_params_validated : dict
         Validated parameters. We ensure that the values support indexing.
     """
-    # noinspection PyUnresolvedReferences
+    # TODO don't raise, check scikit-learn
     n_observations = X.shape[0]
     method_params_validated = {}
     for param_key, param_value in params.items():
@@ -194,8 +199,8 @@ def _check_method_params(
 
 
 def safe_indexing(
-    X: npt.ArrayLike | pd.DataFrame,
-    indices: npt.ArrayLike | slice | None,
+    X: ArrayLike | pd.DataFrame,
+    indices: ArrayLike | slice | None,
     axis: int = 0,
 ):
     """Return rows, items or columns of X using indices.
@@ -233,9 +238,9 @@ def safe_indexing(
 
 
 def safe_split(
-    X: npt.ArrayLike,
-    y: npt.ArrayLike | None = None,
-    indices: np.ndarray | slice | None = None,
+    X: ArrayLike,
+    y: ArrayLike | None = None,
+    indices: IntArray | slice | None = None,
     axis: int = 0,
 ):
     """Create subset of dataset.
@@ -370,10 +375,10 @@ def check_estimator(
 
 
 def _validate_mask(
-    X: np.ndarray,
-    mask: npt.ArrayLike | None,
+    X: FloatArray,
+    mask: ArrayLike | None,
     name: str,
-) -> np.ndarray | None:
+) -> BoolArray | None:
     """Validate a boolean mask aligned with `X`.
 
     Parameters
@@ -402,14 +407,14 @@ def _validate_mask(
 
 
 def input_to_array(
-    items: dict | npt.ArrayLike,
+    items: dict | ArrayLike,
     n_assets: int,
     fill_value: Any,
     dim: int,
-    assets_names: np.ndarray | None,
+    assets_names: ObjArray | None,
     name: str,
-    investable_mask: np.ndarray | None = None,
-) -> np.ndarray:
+    investable_mask: BoolArray | None = None,
+) -> FloatArray:
     """Convert a collection of items (array-like or dictionary) into
     a numpy array and verify its shape.
 
@@ -421,7 +426,7 @@ def input_to_array(
 
     Parameters
     ----------
-    items : np.ndarray | dict | list
+    items : FloatArray | dict | list
         Items to verify and convert to array.
 
     n_assets : int
@@ -508,7 +513,7 @@ def input_to_array(
 def validate_input_list(
     items: list[int | str],
     n_assets: int,
-    assets_names: np.ndarray[str] | None,
+    assets_names: ObjArray | None,
     name: str,
     raise_if_string_missing: bool = True,
 ) -> list[int]:
@@ -615,7 +620,7 @@ def optimal_rounding_decimals(x: float) -> int:
     return min(6, max(int(-np.log10(abs(x))) + 2, 2))
 
 
-def bisection(x: list[np.ndarray]) -> Iterator[list[np.ndarray, np.ndarray]]:
+def bisection(x: list[FloatArray]) -> Iterator[list[FloatArray]]:
     """Generator to bisect a list of array.
 
     Parameters
@@ -637,10 +642,10 @@ def bisection(x: list[np.ndarray]) -> Iterator[list[np.ndarray, np.ndarray]]:
 
 def fit_single_estimator(
     estimator: Any,
-    X: npt.ArrayLike,
-    y: npt.ArrayLike | None,
+    X: ArrayLike,
+    y: ArrayLike | None,
     fit_params: dict,
-    indices: np.ndarray | slice | None = None,
+    indices: IntArray | slice | None = None,
     axis: int = 0,
     method: str = "fit",
 ):
@@ -686,14 +691,14 @@ def fit_single_estimator(
 
 def fit_and_predict(
     estimator: Any,
-    X: npt.ArrayLike,
-    y: npt.ArrayLike | None,
-    train: np.ndarray,
-    test: np.ndarray | list[np.ndarray],
+    X: ArrayLike,
+    y: ArrayLike | None,
+    train: IntArray,
+    test: IntArray | list[IntArray],
     fit_params: dict,
     method: str,
-    column_indices: np.ndarray | None = None,
-) -> npt.ArrayLike | list[npt.ArrayLike]:
+    column_indices: IntArray | None = None,
+) -> ArrayLike | list[ArrayLike]:
     """Fit the estimator and predict values for a given dataset split.
 
     Parameters
@@ -758,7 +763,7 @@ def fit_and_predict(
     return predictions
 
 
-def default_asset_names(n_assets: int) -> np.ndarray:
+def default_asset_names(n_assets: int) -> ObjArray:
     """Default asset names are `["x0", "x1", ..., "x(n_assets - 1)"]`.
 
     Parameters
@@ -774,7 +779,7 @@ def default_asset_names(n_assets: int) -> np.ndarray:
     return np.asarray([f"x{i}" for i in range(n_assets)], dtype=object)
 
 
-def deduplicate_names(names: npt.ArrayLike) -> list[str]:
+def deduplicate_names(names: ArrayLike) -> list[str]:
     """Rename duplicated names by appending "_{duplicate_nb}" at the end.
 
     This function is inspired by the pandas function `_maybe_dedup_names`.
@@ -893,7 +898,7 @@ def half_life_to_decay_factor(half_life: float) -> float:
     return 2.0 ** (-1.0 / half_life)
 
 
-def apply_window_size(X: np.ndarray, window_size: int | None) -> np.ndarray:
+def apply_window_size(X: ArrayLike, window_size: int | None) -> ArrayLike:
     """Return the last `window_size` observations from the array X.
 
     Parameters
@@ -946,3 +951,79 @@ def apply_window_size(X: np.ndarray, window_size: int | None) -> np.ndarray:
         return X
 
     return X[-window_size:]
+
+
+def _call_estimator(
+    estimator: Any,
+    method: str,
+    X: ArrayLike,
+    y: ArrayLike | None = None,
+    *,
+    routed_params: Bunch | None = None,
+    extra_params: Mapping[str, Any] | None = None,
+) -> Any:
+    """Call an estimator method with routed and extra parameters.
+
+    Parameters
+    ----------
+    estimator : Any
+        Estimator exposing the method named by `method`.
+
+    method : str
+        Method name to call on `estimator`.
+
+    X : array-like
+        Input data forwarded as the first positional argument.
+
+    y : array-like, optional
+        Target data forwarded as the second positional argument.
+
+    routed_params : Bunch, optional
+        Processed metadata routing payload exposing an attribute named after
+        `method`. That attribute must be a mapping of keyword arguments to
+        forward to the estimator method.
+
+    extra_params : mapping, optional
+        Additional keyword arguments passed directly to the estimator method.
+        These parameters must not overlap with those coming from
+        `routed_params`.
+
+    Returns
+    -------
+    object
+        Output returned by the estimator method.
+
+    Raises
+    ------
+    TypeError
+        If `estimator` does not implement `method`.
+
+    ValueError
+        If the same keyword argument is provided both through metadata routing
+        and `extra_params`.
+    """
+    method_caller = getattr(estimator, method, None)
+    if method_caller is None or not callable(method_caller):
+        estimator_name = type(estimator).__name__
+        if method == "partial_fit":
+            raise TypeError(
+                f"{estimator_name} does not implement partial_fit. "
+                "This meta-estimator can only use partial_fit with "
+                "sub-estimators that support incremental learning. "
+                "Use a compatible estimator with partial_fit, or call fit instead."
+            )
+        raise TypeError(f"{estimator_name} does not implement {method!r}.")
+
+    routed: Mapping[str, Any] = (
+        {} if routed_params is None else getattr(routed_params, method)
+    )
+    extra_params = {} if extra_params is None else extra_params
+
+    overlap = routed.keys() & extra_params.keys()
+    if overlap:
+        raise ValueError(
+            f"Conflicting parameters for {method!r}: {sorted(overlap)} "
+            "were provided both through metadata routing and extra_params."
+        )
+
+    return method_caller(X, y, **routed, **extra_params)

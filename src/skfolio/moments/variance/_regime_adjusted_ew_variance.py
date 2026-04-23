@@ -1,6 +1,6 @@
 """Regime Adjusted Exponentially Weighted Variance Estimator."""
 
-# Copyright (c) 2023-2025
+# Copyright (c) 2023-2026
 # Author: Hugo Delatte <hugo.delatte@skfoliolabs.com>
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -11,12 +11,12 @@ import warnings
 from collections import deque
 
 import numpy as np
-import numpy.typing as npt
 import scipy.special as scs
 import sklearn.utils.validation as skv
 
 from skfolio.moments.covariance import RegimeAdjustmentMethod
 from skfolio.moments.variance._base import BaseVariance
+from skfolio.typing import ArrayLike, BoolArray, FloatArray
 from skfolio.utils.tools import _validate_mask, half_life_to_decay_factor
 
 _NUMERICAL_THRESHOLD = 1e-12
@@ -129,7 +129,7 @@ class RegimeAdjustedEWVariance(BaseVariance):
 
         .. math::
 
-            \text{hac_var}_i = r_{i,t}^2 + 2 \sum_{j=1}^{L} w_j \cdot r_{i,t} \cdot r_{i,t-j}
+            \text{hac\_var}_i = r_{i,t}^2 + 2 \sum_{j=1}^{L} w_j \cdot r_{i,t} \cdot r_{i,t-j}
 
         where :math:`w_j = 1 - j/(L+1)` is the Bartlett kernel weight.
 
@@ -221,7 +221,7 @@ class RegimeAdjustedEWVariance(BaseVariance):
     n_features_in_ : int
         Number of assets seen during `fit`.
 
-    feature_names_in_ : ndarray of shape (n_features_in_,)
+    feature_names_in_ : ndarray of shape (`n_features_in_`,)
         Names of features seen during `fit`. Defined only when `X`
         has feature names that are all strings.
 
@@ -292,11 +292,11 @@ class RegimeAdjustedEWVariance(BaseVariance):
 
     def fit(
         self,
-        X: npt.ArrayLike,
-        y: npt.ArrayLike | None = None,
+        X: ArrayLike,
+        y: ArrayLike | None = None,
         *,
-        estimation_mask: npt.ArrayLike | None = None,
-        active_mask: npt.ArrayLike | None = None,
+        estimation_mask: ArrayLike | None = None,
+        active_mask: ArrayLike | None = None,
     ) -> RegimeAdjustedEWVariance:
         """Fit the Regime-Adjusted Exponentially Weighted Variance estimator.
 
@@ -348,11 +348,11 @@ class RegimeAdjustedEWVariance(BaseVariance):
 
     def partial_fit(
         self,
-        X: npt.ArrayLike,
-        y: npt.ArrayLike | None = None,
+        X: ArrayLike,
+        y: ArrayLike | None = None,
         *,
-        estimation_mask: npt.ArrayLike | None = None,
-        active_mask: npt.ArrayLike | None = None,
+        estimation_mask: ArrayLike | None = None,
+        active_mask: ArrayLike | None = None,
     ) -> RegimeAdjustedEWVariance:
         """Incrementally fit the estimator with new observations.
 
@@ -536,9 +536,9 @@ class RegimeAdjustedEWVariance(BaseVariance):
 
     def _process_return_row(
         self,
-        returns: np.ndarray,
-        estimation_mask: np.ndarray | None,
-        active_row: np.ndarray | None,
+        returns: FloatArray,
+        estimation_mask: BoolArray | None,
+        active_row: BoolArray | None,
     ):
         """Process a single row of returns.
 
@@ -643,9 +643,9 @@ class RegimeAdjustedEWVariance(BaseVariance):
 
     def _compute_hac_squared(
         self,
-        ret: np.ndarray,
-        finite_mask: np.ndarray,
-    ) -> np.ndarray:
+        ret: FloatArray,
+        finite_mask: BoolArray,
+    ) -> FloatArray:
         """Compute HAC-adjusted squared returns using Newey-West (Bartlett kernel).
 
         Parameters

@@ -229,14 +229,24 @@ Available models
     * Select Complete Assets (handle late inception, delisting, etc.)
     * Drop Zero Variance
 
+* Cross-Sectional Transformers:
+    * Standard Scaler (z-score)
+    * Percentile Rank Scaler
+    * Gaussian Rank Scaler (rank gaussianization)
+    * Winsorizer (percentile clipping)
+    * Tanh Shrinker (smooth outlier shrinkage)
+
 * Cross-Validation and Model Selection:
     * Compatible with all `sklearn` methods (KFold, etc.)
     * Walk Forward
     * Combinatorial Purged Cross-Validation
     * Multiple Randomized Cross-Validation
+    * Covariance Forecast Evaluation
+    * Online Predict and Online Score 
 
 * Hyper-Parameter Tuning:
     * Compatible with all `sklearn` methods (GridSearchCV, RandomizedSearchCV)
+    * Online Grid Search and Online Randomized Search
 
 * Risk Measures:
     * Variance
